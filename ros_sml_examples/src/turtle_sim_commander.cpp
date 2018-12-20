@@ -10,9 +10,9 @@
 
 namespace turtle_sim_commander
 {
-auto action1 = []() { ROS_INFO("In action1"); };
+auto action1 = [](double i) { ROS_INFO("In action1: [%g]", i); };
 
-struct turtle_commander
+struct TurtleSimCommander::turtle_commander
 {
   auto operator()() const
   {
@@ -20,14 +20,17 @@ struct turtle_commander
  
     // clang-format off
     return make_transition_table(
-      *state<TurtleSimCommander::idle> + event<TurtleSimCommander::draw> / ([]{std::cout << "action to draw" << std::endl;},action1) = state<TurtleSimCommander::drawing>,
+      *state<TurtleSimCommander::idle> + event<TurtleSimCommander::draw> / ([]{std::cout << "action to draw" << std::endl;}, action1) = state<TurtleSimCommander::drawing>,
        state<TurtleSimCommander::idle> + sml::on_entry<_> / [] { std::cout << "Entering Idle State" << std::endl;} 
     );
     // clang-format on
   }
 };
 
-TurtleSimCommander::TurtleSimCommander(ros::NodeHandle nh) : nh_(nh), test{std::make_unique<sml::sm<turtle_commander>>()}
+TurtleSimCommander::TurtleSimCommander(ros::NodeHandle nh) : 
+//nh_(nh), test{std::make_unique<sml::sm<turtle_commander>, std::initializer_list<int>>({2})}
+nh_(nh), test{std::make_unique<sml::sm<turtle_commander>>(std::initializer_list<double>({2}))}
+
 {
   pub = nh.advertise<std_msgs::Bool>("/bool", 1);
   sub = nh.subscribe("/bool", 10, &TurtleSimCommander::callback, this);

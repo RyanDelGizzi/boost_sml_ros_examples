@@ -13,13 +13,14 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <memory.h>
+#include <functional>
 
 
 namespace turtle_sim_commander
 {
 namespace sml = boost::sml;
 
-struct turtle_commander;
+
 
 class TurtleSimCommander
 {
@@ -29,6 +30,8 @@ public:
 
   void start();
   void dummyPub();
+
+  struct turtle_commander;
 
   // events
 
@@ -51,6 +54,8 @@ public:
   class idle;
   class drawing;
 
+  //std::function<void()> action1;
+  //constexpr auto action1 = []() { ROS_INFO("In action1"); };
 
 private:
 
