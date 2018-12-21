@@ -7,33 +7,29 @@
  */
 
 #include <ros_sml_examples/turtle_sim_commander.h>
+#include <ros_sml_examples/turtle_sim_sm.h>
+#include <turtle_actionlib/ShapeAction.h>
+#include <ros_sml_examples/sml.hpp>
 
-namespace turtle_sim_commander
+namespace ros_sml_examples
 {
-auto action1 = [](double i) { ROS_INFO("In action1: [%g]", i); };
-
-struct TurtleSimCommander::turtle_commander
+struct TurtleSimCommander::turtle_sim : public boost::sml::sm<turtle_sim_impl>
 {
-  auto operator()() const
+  explicit turtle_sim(TurtleSimCommander* tsm) : boost::sml::sm<turtle_sim_impl>(static_cast<TurtleSimCommander*>(tsm))
   {
-    using namespace sml;
- 
-    // clang-format off
-    return make_transition_table(
-      *state<TurtleSimCommander::idle> + event<TurtleSimCommander::draw> / ([]{std::cout << "action to draw" << std::endl;}, action1) = state<TurtleSimCommander::drawing>,
-       state<TurtleSimCommander::idle> + sml::on_entry<_> / [] { std::cout << "Entering Idle State" << std::endl;} 
-    );
-    // clang-format on
   }
 };
 
-TurtleSimCommander::TurtleSimCommander(ros::NodeHandle nh) : 
-//nh_(nh), test{std::make_unique<sml::sm<turtle_commander>, std::initializer_list<int>>({2})}
-nh_(nh), test{std::make_unique<sml::sm<turtle_commander>>(std::initializer_list<double>({2}))}
+auto action5 = [](double i) { ROS_INFO("In action5: [%g]", i); };
 
+TurtleSimCommander::TurtleSimCommander(ros::NodeHandle nh)
+  : test_(std::make_shared<turtle_sim>(this)), nh_(nh), ac_("shape_server", true)
 {
-  pub = nh.advertise<std_msgs::Bool>("/bool", 1);
-  sub = nh.subscribe("/bool", 10, &TurtleSimCommander::callback, this);
+  sub = nh.subscribe("/cmd", 10, &TurtleSimCommander::cmdCallback, this);
+  ROS_INFO("Waiting For Turtle Server...");
+
+  ac_.waitForServer();
+  ROS_INFO("Turtle Server Found!");
 }
 
 TurtleSimCommander::~TurtleSimCommander()
@@ -42,21 +38,36 @@ TurtleSimCommander::~TurtleSimCommander()
 
 void TurtleSimCommander::start()
 {
-  std_msgs::Bool msg;
-  pub.publish(msg);
+  ROS_INFO("Trying to pub bool faslse");
 }
 
-void TurtleSimCommander::dummyPub()
+void TurtleSimCommander::startDraw(int edges, double radius)
 {
-  std_msgs::Bool msg;
-  msg.data = true;
-  pub.publish(msg);
+  turtle_actionlib::ShapeGoal goal;
+  goal.edges = edges;
+  goal.radius = radius;
+  ac_.sendGoal(goal, boost::bind(&TurtleSimCommander::doneCallback, this, _1, _2),
+      actionlib::SimpleActionClient<turtle_actionlib::ShapeAction>::SimpleActiveCallback(),
+      actionlib::SimpleActionClient<turtle_actionlib::ShapeAction>::SimpleFeedbackCallback());
 }
 
-void TurtleSimCommander::callback(const std_msgs::Bool::ConstPtr& msg)
+void TurtleSimCommander::cmdCallback(const std_msgs::String::ConstPtr& msg)
 {
   ROS_INFO("In Callback");
-  test->process_event(draw{});
+  test_->process_event(draw{ 4, 2.2 });
 }
 
-}  // namespace turtle_sim_commander
+void TurtleSimCommander::doneCallback(const actionlib::SimpleClientGoalState& state,
+                                      const turtle_actionlib::ShapeResultConstPtr& result)
+{
+  ROS_INFO("Finished in state [%s]", state.toString().c_str());
+  ROS_INFO("interior angle: %g   apothem: %g", result->interior_angle, result->apothem);
+  test_->process_event(drawComplete{});
+}
+
+void TurtleSimCommander::here()
+{
+  ROS_INFO("HERE HERE HERE!");
+}
+
+}  // namespace ros_sml_examples

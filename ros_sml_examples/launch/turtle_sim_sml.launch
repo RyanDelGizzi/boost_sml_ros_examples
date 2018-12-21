@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim_node"/>
+  <node pkg="turtle_actionlib" type="shape_server" name="shape_server"/>
+  <node pkg="ros_sml_examples" type="min_example" name="min_example" output="screen"/>
+</launch>

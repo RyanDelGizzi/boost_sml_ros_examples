@@ -10,6 +10,9 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  turtle_actionlib
+  actionlib_msgs
+  actionlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ros_sml_examples
-#  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp turtle_actionlib actionlib actionlib_msgs
 #  DEPENDS system_lib
 )
 
@@ -123,6 +126,9 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/turtle_sim_commander.cpp
 )
+
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

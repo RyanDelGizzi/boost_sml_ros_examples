@@ -53,16 +53,22 @@ class timed_wait;
 int main(int argc, char** argv)
 {
   using namespace sml;
-  using namespace turtle_sim_commander;
+  using namespace ros_sml_examples;
 
   ros::init(argc, argv, "agvr_core_node");
   ros::NodeHandle nh;
 
+ // auto tester = sm<turtle_sim_sm>{ 2.0 };
+  //auto tester_ptr = std::make_unique<sm<turtle_sim_sm>>(tester);
+
+  //std::cout << typeid(tester).name() << " " << typeid(tester_ptr).name() << std::endl;
+  // auto tester_ptr = std::make_shared<sm<turtle_sim_sm>>(tester);
+  // auto tester_ptr = &tester;
+  //tester_ptr->process_event(draw{});
   TurtleSimCommander turtle_sim_commander(nh);
 
   turtle_sim_commander.start();
 
-  ros::Duration(2).sleep();
 
   ros::Duration(2).sleep();
   

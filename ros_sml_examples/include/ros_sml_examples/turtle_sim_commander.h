@@ -9,18 +9,16 @@
 #ifndef ROS_SML_EXAMPLES_TURTLE_SIM_COMMANDER_H
 #define ROS_SML_EXAMPLES_TURTLE_SIM_COMMANDER_H
 
-#include <ros_sml_examples/sml.hpp>
-#include <ros/ros.h>
-#include <std_msgs/Bool.h>
-#include <memory.h>
 #include <functional>
+#include <memory>
 
+#include <ros/ros.h>
+#include <std_msgs/String.h>
+#include <turtle_actionlib/ShapeAction.h>
+#include <actionlib/client/simple_action_client.h>
 
-namespace turtle_sim_commander
+namespace ros_sml_examples
 {
-namespace sml = boost::sml;
-
-
 
 class TurtleSimCommander
 {
@@ -29,48 +27,27 @@ public:
   ~TurtleSimCommander();
 
   void start();
-  void dummyPub();
-
-  struct turtle_commander;
-
-  // events
-
-  struct stop
-  {
-  };
-
-  struct draw
-  {
-    int edges;
-    double radius;
-  };
-
-  struct done
-  {
-  };
-
-  // states
-
-  class idle;
-  class drawing;
-
-  //std::function<void()> action1;
-  //constexpr auto action1 = []() { ROS_INFO("In action1"); };
+  void here();
+  void startDraw(int edges, double radius);
 
 private:
+  ros::Publisher pub;
+  ros::Subscriber sub;
+  ros::NodeHandle nh_;
 
-ros::Publisher pub;
-ros::Subscriber sub;
-ros::NodeHandle nh_;
-
+  actionlib::SimpleActionClient<turtle_actionlib::ShapeAction> ac_;
 
 public:
+  struct turtle_sim;
+  std::shared_ptr<turtle_sim> test_;
 
-std::unique_ptr<sml::sm<turtle_commander>> test;
 
-void callback(const std_msgs::Bool::ConstPtr& msg);
 
+
+  void cmdCallback(const std_msgs::String::ConstPtr& msg);
+  void doneCallback(const actionlib::SimpleClientGoalState& state,
+                    const turtle_actionlib::ShapeResultConstPtr& result);
 };
-}  // namespace turtle_sim_commander
+}  // namespace ros_sml_examples
 
 #endif  // ROS_SML_EXAMPLES_TURTLE_SIM_COMMANDER_H
